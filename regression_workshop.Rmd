@@ -1,7 +1,7 @@
 ---
 title: "Linear regression workshop for HGSS"
 author: "Alex Diaz-Papkovich"
-date: "03/12/2019"
+date: "December 3, 2019"
 output:
   html_document:
     toc: true
@@ -30,13 +30,46 @@ There are a few basic assumptions that you must make when doing linear regressio
 
 The first assumption is that your data are related by a _linear relationship_, that is, it can be expressed as a linear equation. In the simplest case, we take the equation of a line, $y=mx + b$, where we know what the $y$ and $x$ values are and estimate the values of the slope $m$ and intercept $b$. For easier notation, we typically denote the intercept as $\beta_0$ and the slope as $\beta_1$ and rearrange the equation as: $$y=\beta_{0} + \beta_{1}x$$
 
-Of course, we will (hopefully!) have more than one value for each $(x,y)$ pair, so we denote each observation $(x_i,y_i)$. If we have $N$ samples, then $i$ takes the values $1 \dots N$, so our data are described as the collection of observations $(x_1,y_1)\dots(x_N,y_N)$. Given this set of data, our model is now:
+```{r, echo=FALSE}
+## Setup up coordinate system (with x == y aspect ratio):
+plot(c(-2,3), c(-1,5), type = "n", xlab = "x", ylab = "y", asp = 1)
+## the x- and y-axis, and an integer grid
+abline(h = -5:5, v = -5:6, col = "lightgray", lty = 3)
+abline(a = 1, b = 2, col = 2)
+text(2,2, "y = 2x + 1", col = 2, adj = c(-.1, -.1))
+```
+
+We will (hopefully!) have more than one value for each $(x,y)$ pair, so we denote each observation $(x_i,y_i)$. If we have $N$ samples, then $i$ takes the values $1 \dots N$, so our data are described as the collection of observations $(x_1,y_1)\dots(x_N,y_N)$. Given this set of data, our model is now:
 $$y_i = \beta_{0} + \beta_{1}x_{i} \text{ , for } i = 1 \dots N$$
+
+```{r, echo=FALSE}
+## Setup up coordinate system (with x == y aspect ratio):
+x <- seq(-1,3,0.1)
+y <- 2*x + 1
+
+plot(c(-2,3), c(-1,5), type = "n", xlab = "x", ylab = "y", asp = 1)
+## the x- and y-axis, and an integer grid
+abline(h = -5:5, v = -5:6, col = "lightgray", lty = 3)
+abline(a = 1, b = 2, col = 2)
+points(x,y)
+text(2,2, "y = 2x + 1", col = 2, adj = c(-.1, -.1))
+```
 
 Finally, we need to add noise to our model. Our observations will never be perfect, so we have to build this error into the model. The errors are denoted by $\epsilon_{i}$, and we assume that they independently follow the same Normal distribution centred around $0$ and with a constant variance, $\sigma^{2}$. This is written as $\epsilon_{i} \stackrel{iid}{\sim}N(0,\sigma^{2})$. Now, our model looks like:
 $$y_i = \beta_{0} + \beta_{1}x_{i} + \epsilon_{i} \text{ , for } i = 1 \dots N \text{ , } \epsilon_{i} \stackrel{iid}{\sim}N(0,\sigma^{2})$$
+```{r, echo=FALSE}
+## Setup up coordinate system (with x == y aspect ratio):
+x <- seq(-1,3,0.1)
+e <- rnorm(length(x), mean=0, sd=1)
+y <- 2*x + 1 + e
 
-Our goal is: given our observations $(x_i,y_i)$, we want to estimate $\beta_0$ and $\beta_1$, denoted as $\hat{\beta_j}$. The value of $\hat\beta_1$ is the estimate of the unit-change between $x_i$ and $y_i$. For example, if our $y$ values are a person's weight (in kg) and our $x$ values are height (in cm), then $\hat{\beta_1}$ is the estimate of how much somebody's weight in kg increases for a 1cm change in height.
+plot(c(-2,3), c(-1,5), type = "n", xlab = "x", ylab = "y", asp = 1)
+## the x- and y-axis, and an integer grid
+abline(h = -5:5, v = -5:6, col = "lightgray", lty = 3)
+abline(a = 1, b = 2, col = 2)
+points(x,y)
+text(2,2,"y = 2x + 1 + error", col = 2, adj = c(-.1, -.1))
+```
 
 There are several assumptions with this approach:
 
@@ -47,26 +80,27 @@ There are several assumptions with this approach:
 * The errors have *the same variance* (homoscedasticity)
 
 #### How do we estimate $\beta$?
+Here we started with a linear equation and generated our data. In real life, we have our data and need to estimate the linear equation. Given our observations $(x_i,y_i)$, we want to estimate $\beta_0$ and $\beta_1$, denoted as $\hat{\beta_j}$ for $j=0,1$. The value of $\hat\beta_1$ is the estimate of the unit-change between $x_i$ and $y_i$. For example, if our $y$ values are a person's weight (in kg) and our $x$ values are height (in cm), then $\hat{\beta_1}$ is the estimate of how much somebody's weight in kg increases for a 1cm change in height.
 
-If our errors are uncorrelated and have mean zero and are homoscedasticity, then our estimates are the best linear unbiased estimator.
+One logical approach to estimate the values of the $\beta$s is in a way that would make the errors, or equivalently sum of their squares, as small as possible. This is the **ordinary least squares** estimator.
 
-```{r}
-## Setup up coordinate system (with x == y aspect ratio):
-plot(c(-2,3), c(-1,5), type = "n", xlab = "x", ylab = "y", asp = 1)
-## the x- and y-axis, and an integer grid
-abline(h = 0, v = 0, col = "gray60")
-text(1,0, "abline( h = 0 )", col = "gray60", adj = c(0, -.1))
-abline(h = -1:5, v = -2:3, col = "lightgray", lty = 3)
-abline(a = 1, b = 2, col = 2)
-text(1,3, "abline( 1, 2 )", col = 2, adj = c(-.1, -.1))
-```
+$$y_i = \beta_{0} + \beta_{1}x_{i} + \epsilon_{i}
+\\ \text{rearranged as: } \epsilon_i = y_i - \beta_{0} - \beta_{1}x_{i}
+$$
+If we have $N$ observations, then the sum of the squares is
+$$\sum_{i}^{N}\epsilon_{i}^{2} = \sum_{i}^{N}(y_{i} - \beta_{0} - \beta_{1}x_{i})^{2}$$
+
+Because of the assumptions we made earlier, our estimators have some very nice statistical properties. If our errors are uncorrelated and have mean zero and are homoscedasticity, then our estimates are the best linear unbiased estimator.
 
 ### Terminology
 
 
+### Linear regression in R
 
 ### Simple linear regression
 *Simple single linear regression* is a model of two continuous variables measured against one another.
+
+### Multiple linear regression
 
 ### Categorical data
 Categorical data is measured through *dummy variables*. These take on binary values, {0,1}, and are mutually exclusive. Common example include sex and treatment/control. When using multiple values of a categorical value (e.g. Control, Treatment1, Treatment2, etc), you must create one dummy variable per category
