@@ -1,17 +1,81 @@
 ---
-title: "Linear regression workshop"
+title: "Linear regression workshop for HGSS"
 author: "Alex Diaz-Papkovich"
-date: "30/11/2019"
-output: html_document
+date: "03/12/2019"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## What is regression?
+
+## What is linear regression?
+Regression is a set of methods to measure and estimate the relationship between variables. The idea is your data will "regress" to some function. The focus of this workshop is linear regression, one of the most effective and widely-used statistical tools. We'll begin with simple types of data and relationships and work our way up to models with interactions.
+
+### Why linear regression?
+Because it's:
+
+* interpretable
+* easy to implement
+* got good statistical properties
+* robust
+
+### Formulation
+There are a few basic assumptions that you must make when doing linear regression.
+
+The first assumption is that your data are related by a _linear relationship_, that is, it can be expressed as a linear equation. In the simplest case, we take the equation of a line, $y=mx + b$, where we know what the $y$ and $x$ values are and estimate the values of the slope $m$ and intercept $b$. For easier notation, we typically denote the intercept as $\beta_0$ and the slope as $\beta_1$ and rearrange the equation as: $$y=\beta_{0} + \beta_{1}x$$
+
+Of course, we will (hopefully!) have more than one value for each $(x,y)$ pair, so we denote each observation $(x_i,y_i)$. If we have $N$ samples, then $i$ takes the values $1 \dots N$, so our data are described as the collection of observations $(x_1,y_1)\dots(x_N,y_N)$. Given this set of data, our model is now:
+$$y_i = \beta_{0} + \beta_{1}x_{i} \text{ , for } i = 1 \dots N$$
+
+Finally, we need to add noise to our model. Our observations will never be perfect, so we have to build this error into the model. The errors are denoted by $\epsilon_{i}$, and we assume that they independently follow the same Normal distribution centred around $0$ and with a constant variance, $\sigma^{2}$. This is written as $\epsilon_{i} \stackrel{iid}{\sim}N(0,\sigma^{2})$. Now, our model looks like:
+$$y_i = \beta_{0} + \beta_{1}x_{i} + \epsilon_{i} \text{ , for } i = 1 \dots N \text{ , } \epsilon_{i} \stackrel{iid}{\sim}N(0,\sigma^{2})$$
+
+Our goal is: given our observations $(x_i,y_i)$, we want to estimate $\beta_0$ and $\beta_1$, denoted as $\hat{\beta_j}$. The value of $\hat\beta_1$ is the estimate of the unit-change between $x_i$ and $y_i$. For example, if our $y$ values are a person's weight (in kg) and our $x$ values are height (in cm), then $\hat{\beta_1}$ is the estimate of how much somebody's weight in kg increases for a 1cm change in height.
+
+There are several assumptions with this approach:
+
+* The errors are *random*
+* The errors are *independent* ($\implies$ uncorrelated)
+* The errors are *normally distributed*
+* The errors have *mean zero*
+* The errors have *the same variance* (homoscedasticity)
+
+#### How do we estimate $\beta$?
+
+If our errors are uncorrelated and have mean zero and are homoscedasticity, then our estimates are the best linear unbiased estimator.
+
+```{r}
+## Setup up coordinate system (with x == y aspect ratio):
+plot(c(-2,3), c(-1,5), type = "n", xlab = "x", ylab = "y", asp = 1)
+## the x- and y-axis, and an integer grid
+abline(h = 0, v = 0, col = "gray60")
+text(1,0, "abline( h = 0 )", col = "gray60", adj = c(0, -.1))
+abline(h = -1:5, v = -2:3, col = "lightgray", lty = 3)
+abline(a = 1, b = 2, col = 2)
+text(1,3, "abline( 1, 2 )", col = 2, adj = c(-.1, -.1))
+```
+
+### Terminology
 
 
+
+### Simple linear regression
+*Simple single linear regression* is a model of two continuous variables measured against one another.
+
+### Categorical data
+Categorical data is measured through *dummy variables*. These take on binary values, {0,1}, and are mutually exclusive. Common example include sex and treatment/control. When using multiple values of a categorical value (e.g. Control, Treatment1, Treatment2, etc), you must create one dummy variable per category
+
+### Multiple variables
+*Multiple linear regression*
+
+### Multiple dependent variables
+It is possible to have multiple dependent variables. This is used when you believe the values you are predicting share some variation. For example, if you would like to measure height and weight simultaneously based on other variables. This is *multivariate linear regression*.
 
 ## Including Plots
 
@@ -21,4 +85,10 @@ You can also embed plots, for example:
 plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r, echo=TRUE}
+print('test')
+```
+
+## Extensions
+
+* LMMs, Generalized linear models, other variations of regression
