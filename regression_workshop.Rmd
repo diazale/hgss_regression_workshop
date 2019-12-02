@@ -126,7 +126,7 @@ $$Y = \beta X + \epsilon, \epsilon_{i} \stackrel{iid}{\sim}N(0,\sigma^{2})$$
 
 There are many terms used to describe the variables and types of models used. This is a brief reference. 
 
-* Independent variable, regressor, feature, explanatory variable, etc: These are all terms for your $x$ variables.
+* Independent variable, regressor, feature, explanatory variable, predictor, parameter, etc: These are all terms for your $x$ variables.
 * Dependent variable, regressand, target, outcome, response, etc: These are all terms for your $y$ variable, which you are modeling using your $x$ variables
 * Simple/single linear regression: The simplest regression model, $y_i = \beta_0 + x_i \beta_1 + \epsilon_i$
 * Multiple linear regression: Linear regression with multiple independent variables, $y_i = \beta_0 + x_{i,1}\beta_{1} + x_{i,2}\beta_{2} + \dots + x_{i,p}\beta_{p} + \epsilon_i$.
@@ -222,7 +222,7 @@ F-statistic: 195.2 on 1 and 38 DF,  p-value: < 2.2e-16
 
 The residual standard error is the average amount that the predicted variable will deviate from the fitted line. So on average, our $y$ values will be about $26.89$ away from the line.
 
-The multiple $R^2$ is the squared Pearson correlation coefficient, and the adjusted $R^2$ is a version that adjusts for the number of parameters. It is also called the coefficient of determination. Generally it is defined as $R^2 = 1 - \frac{\sum_{i=1}^{N}\epsilon_{i}^{2}}{\sum_{i=1}^{N}(y_{i} - \bar{y})^{2}} = 1 - \frac{SSE}{SST}$. It is bounded between $0$ and $1$, and is the proportion of variance explained by your model -- the closer your model is to $1$, the better of a fit your model is. However, adding more and more variables just to get a better $R^2$ value is discouraged as it leads to model overfitting. Remember, the goal is to explain relationships your data, and not to meet some arbitrary threshold!
+The R-squared ($R^2$) is the **coefficient of determination**. It is defined as $R^2 = 1 - \frac{\sum_{i=1}^{N}\epsilon_{i}^{2}}{\sum_{i=1}^{N}(y_{i} - \bar{y})^{2}} = 1 - \frac{SSE}{SST}$. It is bounded between $0$ and $1$, and is the proportion of variance explained by your model -- the closer your model is to $1$, the better of a fit your model is. If your $R^2$ is $0$, it explains none of the variance, and if it's $1$, then all of your points fall exactly on the fitted line. In simple linear regression, the $R^2$ is the squared Pearson correlation coefficient, $\rho$. You should note that it is a measure of the *linear* relationship between variables. It's possible to have an explicit non-linear relationship (such as $y = x^2$) between $x$ and $y$. In these cases, a linear model could have $R^2 = 0$ even though the variables are very clearly related. Adding extra parameters will artifically inflate the value of $R^2$ despite not adding any explanatory value; the adjusted $R^2$ adjusts for this. Remember, the goal is to explain relationships your data, and not to meet some arbitrary threshold!
 
 The F-statistic tests the hypothesis that *all* of your non-intercept $\beta$ values are $0$, ie:
 $$H_0: \beta_1 = \dots = \beta_p = 0 \text{ vs. } H_A:\text{At least one slope is not zero}$$
@@ -671,8 +671,13 @@ ggplot(simpsons_data, aes(x=x, y=y, colour=group)) +
 This introduction provides a good basis for pursuing more complex analyses. Some of these include:
 
 * **Interactions**. In some cases independent variables will interact so that their slopes will vary depending on combined values. For example, it's possible that a drug response is strongly related to sex and age, and also the combination of the two (e.g. it gets weaker for males as they get older). This can be coded in R as `lm(y ~ x1 + x2 + x1*x2)`.
-* **(Multiple) Analysis of (co)variance (ANOVA, ANCOVA, MANOVA, MANCOVA)**. Used for testing the differences between multiple groups (ANOVA), possibly controlling for continous covariates (ANCOVA), or using multiple response variables (MANOVA/MANCOVA)
+* **Time series**. Longitudinal data often has correlations in the error terms. A common example is retail sales, which follow annual cycles. In biology, you may encounter measurements of phenotypes that vary systematically by season or time of day. Time series analysis can control for cyclical measures and examine overall trends.
+* **(Multiple) Analysis of (co)variance (ANOVA, ANCOVA, MANOVA, MANCOVA)**. Used for testing the differences between multiple groups (ANOVA), possibly controlling for continous covariates (ANCOVA), or using multiple response variables (MANOVA/MANCOVA). These can be thought of as specific types of linear regression models.
 * **Generalized linear models**, including logistic regression, to model categorical or binary data. These are used to calculate odds ratios and are common in estimating probabilities (e.g. probability of dying, contracting a disease, etc)
 * **Linear mixed models**. So far we've assumed that estimates of $\beta$ are fixed, ie they remain the same across values of $x$. It's possible that they vary 
 * **Regularized regression**. In cases where we have many explanatory variables, regularization can improve our estimates. Common methods include Lasso, Ridge, and Elastic Net.
 * **High dimensional data**. Sometimes we have massive numbers of explanatory variables and/or samples. This is common in gene expression data, single cell sequencing, neuroinformatics, etc. There are several approaches both for dimension reduction and modeling, and it is a very active area of research.
+
+## References
+
+In addition to the links provided, I often reference *Introduction to regression modeling* by Bovas Abraham and Johannes Ledolter (2006). It is more focused on the mathematical and statistical side of things, but is not overly technical and helps to clearly lay out why we see certain results.
