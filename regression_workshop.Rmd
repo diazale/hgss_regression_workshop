@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ## What is linear regression?
-Regression is a set of methods to measure and estimate the relationship between variables. The idea is your data will "regress" to some function. The focus of this workshop is linear regression, one of the most effective and widely-used statistical tools. We'll begin with simple types of data and relationships and work our way up to models with interactions.
+Regression is a set of methods to measure and estimate the relationship between variables. The idea is your data will "regress" to some function. The focus of this workshop is linear regression, one of the most effective and widely-used statistical tools.
 
 ### Why linear regression?
 Because it's:
@@ -87,41 +87,480 @@ One logical approach to estimate the values of the $\beta$s is in a way that wou
 $$y_i = \beta_{0} + \beta_{1}x_{i} + \epsilon_{i}
 \\ \text{rearranged as: } \epsilon_i = y_i - \beta_{0} - \beta_{1}x_{i}
 $$
-If we have $N$ observations, then the sum of the squares is
-$$\sum_{i}^{N}\epsilon_{i}^{2} = \sum_{i}^{N}(y_{i} - \beta_{0} - \beta_{1}x_{i})^{2}$$
+If we have $N$ observations, then the sum of the squared errors is
+$$\sum_{i}^{N}\epsilon_{i}^{2} = \sum_{i}^{N}(y_{i} - \beta_{0} - \beta_{1}x_{i})^{2} = SSE$$
 
-Because of the assumptions we made earlier, our estimators have some very nice statistical properties. If our errors are uncorrelated and have mean zero and are homoscedasticity, then our estimates are the best linear unbiased estimator.
+Geometrically, we are drawing squares on our regression plot: for each observation $i$, the square has sides of length $\epsilon_i$ (the distance between the point and the regression line) and area $\epsilon_i^2$. The goal of the least squares estimator is to make the sum of the areas of these squares as small as possible. For an intuitive animation, [see this web page](http://setosa.io/ev/ordinary-least-squares-regression/).
 
-### Terminology
+Using some calculus, the estimates of the $\beta$s turn out to be:
+
+$$\hat{\beta_1} = \frac{\sum^{N}_{i=1}(x_{i} - \bar{x})(y_{i} - \bar{y})}
+                  {\sum_{i=1}^{N}(x_{i} - \bar{x})^{2}} = \frac{SS_{xy}}{SS_{xx}}$$
+                  
+$$\hat{\beta_0} = \bar{y} - \hat{\beta_{1}}\bar{x}$$
+
+Because of the assumptions we made earlier, our estimators have some very nice statistical properties. If our errors are uncorrelated and have mean zero and are homoscedasticity, then our estimates are the best linear unbiased estimator. Being unbiased means that the estimator  of $\beta$, on average, the true value of the $\beta$. Being the "best" estimator means it has the lowest variance of all linear unbiased estimators. There are numerous websites and textbooks that discuss derivations of estimates in great detail.
+
+### Notation and terminology
+Models are usually written in matrix notation for convenience. So far we have worked with one continuous $y$ variable and one continuous $x$ variable. This is called **simple linear regression**. The matrix formulation of simple linear regression is:
+
+$$Y = \begin{pmatrix}
+y_1 \\ y_2 \\ \dots \\ y_N
+\end{pmatrix}, X =
+\begin{pmatrix}
+1 & x_{1} \\ 1 & x_{2} \\ \dots & \dots \\ 1 & x_{N}
+\end{pmatrix},
+\beta = \begin{pmatrix}
+\beta_{0} \\ \beta_{1}
+\end{pmatrix},
+\epsilon = \begin{pmatrix}
+\epsilon_{1} \\ \epsilon_{2} \\ \dots \\ \epsilon_{N}
+\end{pmatrix}$$
+$$Y = \beta X + \epsilon, \epsilon_{i} \stackrel{iid}{\sim}N(0,\sigma^{2})$$
 
 
-### Linear regression in R
 
+There are many terms used to describe the variables and types of models used. This is a brief reference. 
+
+* Independent variable, regressor, feature, explanatory variable, etc: These are all terms for your $x$ variables.
+* Dependent variable, regressand, target, outcome, response, etc: These are all terms for your $y$ variable, which you are modeling using your $x$ variables
+* Simple/single linear regression: The simplest regression model, $y_i = \beta_0 + x_i \beta_1 + \epsilon_i$
+* Multiple linear regression: Linear regression with multiple independent variables, $y_i = \beta_0 + x_{i,1}\beta_{1} + x_{i,2}\beta_{2} + \dots + x_{i,p}\beta_{p} + \epsilon_i$.
+* Multivariate linear regression: Linear regression with multiple dependent (response) variables that share a covariance structure, $Y_{ij} = \beta_{0j} + \beta_{1j}X_{i1} + \dots + \beta_{pj}X_{ip} + \epsilon_{ij}$ for observations $i=1, \dots, N$ and dependent variables $j = 1, \dots,m$. We won't go into this in this workshop, but it's useful for when you want to simultaneously model related outcomes, such as multiple phenotypes given a shared input, like gene expression levels.
+
+As an aside, this is why it's important to know, mathematically, what your model looks like. Using ambiguous terms makes it tedious to understand and/or replicate research and results.
+
+## Linear regression in R
 ### Simple linear regression
-*Simple single linear regression* is a model of two continuous variables measured against one another.
+Most scientific programming languages have built-in linear regression. In R, linear models are constructed with the `lm` function. The general format is:
 
-### Multiple linear regression
+``my_model <- lm(y ~ x1 + x2 + ... xp, data = my_data)``
 
-### Categorical data
-Categorical data is measured through *dummy variables*. These take on binary values, {0,1}, and are mutually exclusive. Common example include sex and treatment/control. When using multiple values of a categorical value (e.g. Control, Treatment1, Treatment2, etc), you must create one dummy variable per category
+As an example, let's generate some data and run a regression on it.
+
+```{r Generate some simulation data}
+set.seed(20191203) # set a seed for reproducibility
+
+# lets set up some true data
+b0 <- -300 # true beta_0
+b1 <- 7 # true beta_1
+N <- 40 # sample size
+
+# generate some x values, let's pretend it's height in inches
+# a sample of size N bounded between 50 and 80
+x_data <- runif(N,50,80)
+
+# generate some random normal errors
+errs <- rnorm(N, mean = 0, sd = 30)
+
+y_data <- b0 + x_data*b1 + errs
+```
+
+The first thing you should do is **look at your data**. This should give you some idea of whether your data are linearly related.
+
+```{r Plotting our generated data}
+plot(x_data, y_data)
+```
+
+Note that the data is still kind of noisy -- this is fine, as data is not always clearly linearly related. However, if you saw other shapes (like parabolas, exponential growth, or periodicity), then the linear model would need some changes. Moving on, we code our model as:
+
+```{r Setting up our linear model}
+my_model <- lm(y_data ~ x_data)
+```
+
+To look at the results of our model, we use the `summary` function.
+
+```{r}
+summary(my_model)
+```
+
+What's going on in this output?
+
+```
+Call:
+lm(formula = y_data ~ x_data)
+```
+
+The first part shows the formula R used to run the analysis.
+
+```
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-58.154 -13.992   1.414  24.988  49.085 
+```
+
+This portion is a summary of the residuals (errors). We'll follow up later.
+
+```
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -310.4223    33.3369  -9.312 2.38e-11 ***
+x_data         7.1091     0.5088  13.972  < 2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
+
+The coefficients are the meat of the analysis. They are our slopes and intercept. The estimate for our intercept is $\hat{\beta_{0}} = -310.4223$ and for the slope is $\hat{\beta_1} = 7.1091$. Recall our original values when generating the data were $-300$ and $7$, respectively, so this is pretty good!
+
+The standard error refers to the standard error for the estimate of particular $\beta$ value. In this case, the standard error around the slope is $0.5088$, and the standard error around the intercept is $33.3369$. Next we have the t-statistic and p-value for each $\beta$. Note that the t-statistic is the estimate divided by the standard error, and the p-value is the probability that the t-statistic is drawn at random from a student's t-distribution with $N-p-1$ degrees of freedom, where $p$ is the number of independent variables. In principle you could calculate these values yourself... but that's what software is for.
+
+Moving on, although we have estimates of our $\beta$ values, we'd also like to know how likely it is that it's actually zero (perhaps the standard deviations are so large that $\beta$ could plausibly be $0$). So for each slope, using the aforementioned t-statistic, we are testing:
+
+$$H_{0}: \beta_{i} = 0 \text{ vs. } H_{A}: \beta_i \ne 0$$
+
+In this case our p-value falls below $0.05$ for both $\beta_0$ and $\beta_1$, so we reject the null hypothesis in each case. That is, our slopes are non-zero. If you run an analysis with multiple $\beta$s, you will need to asses the significance of each slope and remove those that do not appear to be significant.
+
+```
+Residual standard error: 26.89 on 38 degrees of freedom
+Multiple R-squared:  0.8371,	Adjusted R-squared:  0.8328 
+F-statistic: 195.2 on 1 and 38 DF,  p-value: < 2.2e-16
+```
+
+The residual standard error is the average amount that the predicted variable will deviate from the fitted line. So on average, our $y$ values will be about $26.89$ away from the line.
+
+The multiple $R^2$ is the squared Pearson correlation coefficient, and the adjusted $R^2$ is a version that adjusts for the number of parameters. It is usually bounded between $0$ and $1$, and is the proportion of variance explained by your model -- the closer your model is to $1$, the better of a fit your model is. However, adding more and more variables just to get a better $R^2$ value is discouraged as it leads to model overfitting. Remember, the goal is to explain relationships your data, and not to meet some arbitrary threshold!
+
+The F-statistic tests the hypothesis that *all* of your non-intercept $\beta$ values are $0$, ie:
+$$H_0: \beta_1 = \dots = \beta_p = 0 \text{ vs. } H_A:\text{At least one slope is not zero}$$
+If your F-statistic is non-significant, your model has serious issues as none of your predictors are useful! In this case it's a moot point as we only have one slope anyway.
+
+We can visualize what the model looks like:
+
+```{r Visualizing simple linear regression}
+plot(x_data, y_data)
+abline(my_model)
+```
 
 ### Multiple variables
-*Multiple linear regression*
+Often we want to test multiple variables. Luckily, this is straightforward to do -- we simply add more variables to our model and carry out the rest of the tests as intended. Mathematically, we have:
+$$y_i = \beta_0 + \beta_1x_{i1} + \beta_{2}x_{i2} + \epsilon_{i}$$
 
-### Multiple dependent variables
-It is possible to have multiple dependent variables. This is used when you believe the values you are predicting share some variation. For example, if you would like to measure height and weight simultaneously based on other variables. This is *multivariate linear regression*.
+```{r Multiple regression}
+set.seed(20191203) # set a seed for reproducibility
 
-## Including Plots
+# lets set up some true data
+b0 <- -300 # true beta_0
+b1 <- 7 # true beta_1
+b2 <- -12 # true beta_2
+N <- 40 # sample size
 
-You can also embed plots, for example:
+# generate some x values again
+x1_data <- runif(N,50,80)
+x2_data <- runif(N,10,20)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+# generate some random normal errors
+errs <- rnorm(N, mean = 0, sd = 30)
+
+y_data <- b0 + x1_data*b1 + x2_data*b2 + errs
 ```
 
-```{r, echo=TRUE}
-print('test')
+In this case, we've created our $y$ variable as a linear combination of two variables ($x1$ and $x2$). Lets code this in R and see what the results are. To begin, we'll put our data into a dataframe -- so far we've only worked with vectors. Generally you'll be working with dataframes (or some equivalent if you're working in another language), which are easier to manage. The results will be the same, but slightly easier to follow
+
+```{r Create the linear model and show the output}
+# put the data into a dataframe
+
+my_data <- data.frame(y_data, x1_data, x2_data) # put the data into a frame
+colnames(my_data) <- c("y","x1","x2") # give names to our variables
+
+my_model_2 <- lm(y ~ x1 + x2, data = my_data) # set up the model
+summary(my_model_2) # output the analysis
 ```
+
+The estimates are:
+
+* $\hat{\beta_0} = -253.3287$ ($\beta_0 = -300$)
+* $\hat{\beta_{1}} = 6.0382$ ($\beta_1 = 7$)
+* $\hat{\beta_{2}} = -11.0692$ ($\beta_2 = -12$)
+
+The results are close. As an exercise, let's see what happens if we raise the sample size to something huge, say, $10,000$.
+
+```{r Multiple regression with large sample size}
+set.seed(20191203) # set a seed for reproducibility
+
+# lets set up some true data
+b0 <- -300 # true beta_0
+b1 <- 7 # true beta_1
+b2 <- -12 # true beta_2
+N <- 10000 # sample size
+
+# generate some x values again
+x1_data <- runif(N,50,80)
+x2_data <- runif(N,10,20)
+
+# generate some random normal errors
+errs <- rnorm(N, mean = 0, sd = 30)
+
+y_data <- b0 + x1_data*b1 + x2_data*b2 + errs
+
+my_model_3 <- lm(y_data ~ x1_data + x2_data)
+summary(my_model_3)
+```
+
+So as the sample size gets bigger, the estimates of the $\beta$ values get much closer to the true value!
+
+We can also visualize this regression, although since we've got an extra dimension, we are now fitting a plane in 3D space, as opposed to a line in 2D space.
+
+```{r 3D regression}
+set.seed(20191203) # set a seed for reproducibility
+
+# lets set up some true data
+b0 <- -300 # true beta_0
+b1 <- 7 # true beta_1
+b2 <- -12 # true beta_2
+N <- 100 # sample size
+
+# generate some x values again
+x1_data <- runif(N,50,80)
+x2_data <- runif(N,10,20)
+
+# generate some random normal errors
+errs <- rnorm(N, mean = 0, sd = 30)
+
+y_data <- b0 + x1_data*b1 + x2_data*b2 + errs
+
+my_model_3 <- lm(y_data ~ x1_data + x2_data)
+
+library(scatterplot3d) # load the library for visualization - you may need to install this
+plot3d <- scatterplot3d(cbind.data.frame(x1_data,x2_data,y_data), angle=55)
+plot3d$plane3d(my_model_3)
+```
+
+Unfortunately we can't perceive beyond three dimensions. But for now, this will do.
+
+### Categorical data
+Categorical data is measured through *dummy variables*. These take on binary values, {0,1}, and are mutually exclusive. Common example include sex and treatment/control. When using multiple values of a categorical value (e.g. Control, Treatment1, Treatment2, etc), you must create one dummy variable per category. In R, you can do this automatically using the `factor` function. The results of regression will be relative to some reference group. For example, if you code for sex, then the estimated $\beta$ will be the difference in averages for males relative to females, without loss of generality. Our model is:
+
+$$y_i = \beta_0 + \beta_1x_{i} + \epsilon_{i} \text{ ,where } x_{i}=\{0,1\}$$
+
+Lets simulate some more data again, this time from two groups.
+```{r Regression with categorical data}
+set.seed(20191203) # set a seed for reproducibility
+
+ng <- 2 # number of groups
+N <- 40 # sample size
+
+# values of the true betas
+b0 <- 10
+b1 <- -5
+
+group <- rep( c("group1", "group2"), each = N) # create the two sets of groups
+errs <- rnorm(ng*N, 0, sd=10) # create the standard errors
+
+y_data <- b0 + b1*(group=="group2") + errs # those in group 2 are multiplied by b1
+my_model_cat <- lm(y_data ~ as.factor(group)) # define the linear model
+summary(my_model_cat)
+```
+
+Once again, we retrieve pretty good estimates of our true $\beta$ values.
+
+### Relationship to other statistical tests
+
+Pausing to think for a moment... what are we testing? We assume our data comes from two distributions, and that the means between these distributions are different, i.e., their difference is not zero. We can visualize this via (for example) a boxplot:
+
+```{r Visualizing difference between groups}
+plot(factor(group), y_data)
+```
+
+In fact, if we run a t-test instead of a regression model, we actually retrieve the same estimates we had before:
+
+```{r t-test comparisons}
+group1_data <- y_data[1:40]
+group2_data <- y_data[41:80]
+
+t.test(group1_data, group2_data) # full t-test
+
+print("Estimated difference between groups:")
+print((t.test(y_data[41:80], y_data[1:40])$estimate[1] - 
+  t.test(y_data[41:80], y_data[1:40])$estimate[2])) # estimated difference
+```
+
+Basically every statistical test can be rewritten in terms of a linear model! There is an excellent intro available [here](https://lindeloev.github.io/tests-as-linear/).
+
+### Continuous and categorical data
+Using the above, we can combine categorical and continuous data into one model. We will treat $x_1$ as continuous and $x_2$ as categorical.
+
+```{r Categorical and mixed data}
+set.seed(20191203) # set a seed for reproducibility
+
+# lets set up some true data
+b0 <- -300 # true beta_0
+b1 <- 7 # true beta_1
+b2 <- -30 # true beta_2
+N <- 100 # sample size
+
+# generate some x values again
+x1_data <- runif(N,50,80) # generate continuous data
+x2_data <- c(rep(1,N/2), rep(0,N/2)) # generate binary data
+
+# generate some random normal errors
+errs <- rnorm(N, mean = 0, sd = 30)
+
+y_data <- b0 + x1_data*b1 + x2_data*b2 + errs
+
+my_model_cont_cat <- lm(y_data ~ x1_data + x2_data)
+summary(my_model_cont_cat)
+```
+
+We would read this output as before. Let's visualize what we're looking at.
+
+```{r Visualizing categorical and continuous data}
+library(ggplot2)# we'll use ggplot for plotting here
+
+set.seed(20191203) # set a seed for reproducibility
+
+# lets set up some true data
+b0 <- -300 # true beta_0
+b1 <- 7 # true beta_1
+b2 <- -30 # true beta_2
+N <- 100 # sample size
+
+# generate some x values again
+x1_data <- runif(N,50,80) # generate continuous data
+x2_data <- c(rep(1,N/2), rep(0,N/2)) # generate binary data
+
+# generate some random normal errors
+errs <- rnorm(N, mean = 0, sd = 30)
+
+y_data <- b0 + x1_data*b1 + x2_data*b2 + errs
+
+# put together a data frame
+my_data <- data.frame(y_data, x1_data, factor(x2_data))
+colnames(my_data) <- c("y", "x1", "x2")
+
+# generate a linear model
+my_model_cont_cat <- lm(y ~ x1 + x2, data = my_data)
+
+p <- ggplot(data = my_data, aes(y = y, x = x1, colour = x2)) +
+  geom_point() +
+  geom_abline(intercept = coef(my_model_cont_cat)[1], slope = coef(my_model_cont_cat)[2], colour="#F8766D") +
+  geom_abline(intercept = coef(my_model_cont_cat)[1] + coef(my_model_cont_cat)[3],
+              slope = coef(my_model_cont_cat)[2], colour = "#00BFC4")
+
+p
+```
+
+Depending on whether the data belongs to one category or another (sex or treatment, for example), the regression line is pushed up or down depending on the estimate of the appropriate $\beta$.
+
+### Prediction
+Imagine we have some input data and want to predict its value according to our model. Mathematically, this is straightforward. If we have our estimates of $\beta$ values, then we just plug it in. That is, we take our inputs and map them to the regression line we've drawn. The equation is,
+$$y_{predicted} = \hat{\beta_{0}} + \hat{\beta_{1}}x_{input_1} + \dots + \hat{\beta_{p}}x_{input_p}$$
+In R, we can use the `predict` function. All of this holds for when you have multiple parameters as well. Lets look at the case of simple linear regression, for illustration.
+
+```{r}
+set.seed(20191203) # set a seed for reproducibility
+
+# lets set up some true data
+b0 <- -300 # true beta_0
+b1 <- 7 # true beta_1
+N <- 40 # sample size
+
+# generate some x values, let's pretend it's height in inches
+# a sample of size N bounded between 50 and 80
+x_data <- runif(N,50,80)
+
+# generate some random normal errors
+errs <- rnorm(N, mean = 0, sd = 30)
+
+y_data <- b0 + x_data*b1 + errs
+
+my_model <- lm(y_data ~ x_data)
+
+# Create new points at x=70 and x=72
+# predict where the data will fall and plot it
+new_points <- data.frame(x_data=c(72,70))
+new_prediction <- predict(my_model, new_points)
+
+plot(x_data, y_data)
+abline(my_model)
+points(x = new_points$x_data, y = new_prediction, col = "red", pch="X")
+```
+
+### Model evaluation
+Now that we've constructed our models, we need to check how good they are. To do this, we carry out residual diagnostics. Recall the assumptions of our residuals:
+
+* They are independent and identically distributed according to a normal distribution
+
+The primary way to diagnose issues is to look at plots of the error terms. If we look at a scatterplot of errors, they should be random and distributed around the line $y=0$ regardless of any other factors (e.g. order of the points or the value of the $x$ variables). There should be no patterns. Next, if we look at a QQ plot for a normal distribution, they should fall along a straight line (or at least something close to it). It's quite easy to generate these plots in R -- you just put your model into the `plot` function. It generates three plots:
+
+1. The scatterplot of errors vs the fitted values. These should be randomly distributed about the x axis (the line $y=0$)
+2. The normal distribution QQ plot of errors. The values should mostly fall on the diagonal line.
+3. Studentized residuals. The values should be randomly distributed 
+4. A measure of leverage (if any points are huge outliers, they may show up here)
+
+```{r}
+set.seed(20191203) # set a seed for reproducibility
+
+# lets set up some true data
+b0 <- -300 # true beta_0
+b1 <- 7 # true beta_1
+N <- 40 # sample size
+
+# generate some x values, let's pretend it's height in inches
+# a sample of size N bounded between 50 and 80
+x_data <- runif(N,50,80)
+
+# generate some random normal errors
+errs <- rnorm(N, mean = 0, sd = 30)
+
+y_data <- b0 + x_data*b1 + errs
+
+my_model <- lm(y_data ~ x_data)
+plot(my_model)
+```
+
+In this case our errors don't look totally random even though we generated them in specifically such a manner. The lesson here is that with small samples, sometimes patterns appear in randomness! Lets increase the sample size and see what happens.
+
+```{r}
+set.seed(20191203) # set a seed for reproducibility
+
+# lets set up some true data
+b0 <- -300 # true beta_0
+b1 <- 7 # true beta_1
+N <- 1000 # sample size
+
+# generate some x values, let's pretend it's height in inches
+# a sample of size N bounded between 50 and 80
+x_data <- runif(N,50,80)
+
+# generate some random normal errors
+errs <- rnorm(N, mean = 0, sd = 30)
+
+y_data <- b0 + x_data*b1 + errs
+
+my_model <- lm(y_data ~ x_data)
+plot(my_model)
+```
+
+These plots are much more satisfying. What do bad plots look like?
+
+```{r}
+set.seed(20191203) # set a seed for reproducibility
+
+# lets set up some true data
+b0 <- -300 # true beta_0
+b1 <- 7 # true beta_1
+N <- 40 # sample size
+
+# generate some x values, let's pretend it's height in inches
+# a sample of size N bounded between 50 and 80
+x_data <- runif(N,50,80)
+
+# generate some random normal errors
+errs <- rnorm(N, mean = 0, sd = 30)
+
+y_data <- b0 + ((x_data)^2)*b1 + errs
+
+my_model_bad <- lm(y_data ~ x_data)
+summary(my_model_bad)
+```
+
+### Pitfalls
+
+* Interactions
+* Anscomb's quartet
+* Patterns in noise
+* Simpson's paradox
+* Wrong data format
 
 ## Extensions
 
