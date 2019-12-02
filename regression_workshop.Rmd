@@ -573,11 +573,11 @@ abline(my_model_bad)
 
 The lesson here is **always look at your data**! Often you can salvage your model by transforming the inputs to stabilize their values. Since we have an exponential relationship here, we could use the function $log(x)$ and define a model $y = \beta_0 + \beta_{1}log(x)$.
 
-### Pitfalls
+## Pitfalls
 
 Linear regression is not appropriate to predict categorical or binary values, such as probability of death. Generalized linear models are more suited for this approach. If your $x$ variables are strongly correlated (*multicollinearity*), estimates from the models will be unreliable. In this case you should remove redundant parameters. If you have many parameters relative to your sample size (or more parameters), you should look at regularized regression methods or dimension reduction approaches, such as principal components analysis.
 
-#### Anscombe's quartet
+### Anscombe's quartet
 
 Anscombe's quartet is a collection of four datasets that have identical regression results. If we run summaries on them, this is what we get.
 ```{r Anscombes quartet, echo=FALSE}
@@ -611,7 +611,7 @@ mtext("Anscombe\'s 4 Regression data sets", outer = TRUE, cex = 1.5)
 par(op)
 ```
 
-#### Patterns in noise
+### Patterns in noise
 
 Even if we generate totally random data, we may get "significant" results. Lets run 100 trials of 20 values chosen at random from $[0,1]$ and count how often the $\beta_1$ is statistically significant.
 
@@ -637,7 +637,7 @@ for (t in 1:trials){
 print(paste("We have",num_sig,"significant results!"))
 ```
 
-#### Confounders and Simpson's paradox
+### Confounders and Simpson's paradox
 Confounding variables mask true relationships between the variables you're measuring. Simpson's paradox occurs when after adding confounders to a model, the original trends disappear or reverse.
 
 ```{r Plotting Simpsons paradox}
