@@ -120,7 +120,7 @@ y_1 \\ y_2 \\ \dots \\ y_N
 \epsilon = \begin{pmatrix}
 \epsilon_{1} \\ \epsilon_{2} \\ \dots \\ \epsilon_{N}
 \end{pmatrix}$$
-$$Y = \beta X + \epsilon, \epsilon_{i} \stackrel{iid}{\sim}N(0,\sigma^{2})$$
+$$Y = X\beta + \epsilon, \epsilon_{i} \stackrel{iid}{\sim}N(0,\sigma^{2})$$
 
 
 
@@ -138,7 +138,7 @@ As an aside, this is why it's important to know, mathematically, what your model
 ### Simple linear regression
 Most scientific programming languages have built-in linear regression. In R, linear models are constructed with the `lm` function. The general format is:
 
-``my_model <- lm(y ~ x1 + x2 + ... xp, data = my_data)``
+``my_model <- lm(y ~ x1 + x2 + ... + xp, data = my_data)``
 
 As an example, let's generate some data and run a regression on it.
 
