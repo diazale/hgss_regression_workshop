@@ -247,7 +247,22 @@ The F-statistic tests the hypothesis that *all* of your non-intercept $\beta$ va
 $$H_0: \beta_1 = \dots = \beta_p = 0 \text{ vs. } H_A:\text{At least one slope is not zero}$$
 If your F-statistic is non-significant, none of your predictors are useful! In this case it's a moot point as we only have one slope anyway.
 
-<!--Because of the assumptions we made earlier,  we can contruct confidence intervals for our $\beta$ values. We can do this in R using `confint`, or construct them ourselves using the equation $\hat{\beta} \pm t_{1 - \alpha/2,n-p}s.e.(\hat{\beta})  $-->
+Because of the assumptions we made earlier,  we can contruct confidence intervals for our $\beta$ values. We can do this in R using `confint`, or construct them ourselves using the equation $\hat{\beta_{k}} \pm t_{1 - \alpha/2,n-p-1}s.e.(\hat{\beta_{k}})$, where $t_{1 - \alpha/2,n-p-1}$ are the values of the student's t-distribution at $\alpha/2$ significance level at $n-p-1$ degrees of freedom. For a $95\%$ confidence interval, these would be $t_{0.975, n-p-1}$ and $t_{0.025, n-p-1}$.
+
+```{r Confidence intervals for betas, echo=F}
+print("Confidence intervals with confint function")
+print(confint(my_model))
+```
+
+```{r Manually calculate confidence intervals}
+t_1 <- qt(0.025,38) # n - p - 1 = 40 - 1 - 1 = 38
+# t_2 <- qt(0.975,38) # the t-distribution is symmetric so this is just t_1*(-1)
+
+beta_est <- summary(my_model)$coefficients[2,1] # retrieve the beta1 estimate from the model
+beta_sd <- summary(my_model)$coefficients[2,2] # retrieve the sd of the beta1 esimate from the model
+
+print(paste("(",(beta_est + t_1*beta_sd), ", " , (beta_est - t_1*beta_sd), ")",sep=""))
+```
 
 ### Multiple variables
 Often we want to test multiple variables. Luckily, this is straightforward to do -- we simply add more variables to our model and carry out the rest of the tests as intended. Mathematically, we have:
