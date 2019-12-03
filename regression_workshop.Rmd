@@ -84,7 +84,7 @@ There are several assumptions with this approach:
 * The errors have *the same variance* (homoscedasticity)
 
 #### How do we estimate $\beta$?
-Here we started with a linear equation and generated our data. In real life, we have our data and need to estimate the linear equation. Given our observations $(x_i,y_i)$, we want to estimate $\beta_0$ and $\beta_1$, denoted as $\hat{\beta_j}$ for $j=0,1$. The value of $\hat\beta_1$ is the estimate of the unit-change between $x_i$ and $y_i$. For example, if our $y$ values are a person's weight (in kg) and our $x$ values are height (in cm), then $\hat{\beta_1}$ is the estimate of how much somebody's weight in kg increases for a 1cm change in height.
+Here we started with a linear equation and generated our data. In real life, we have our data and need to estimate the linear equation. Given our observations $(x_i,y_i)$, we want to estimate $\beta_0$ and $\beta_1$. Estimates of $\beta$ values are denoted as $\hat{\beta_j}$ for every parameter $j$. The value of $\hat\beta_1$ is the estimate of the unit-change between $x_i$ and $y_i$. For example, if our $y$ values are a person's weight (in kg) and our $x$ values are height (in cm), then $\hat{\beta_1}$ is the estimate of how much somebody's weight in kg increases for a 1cm change in height.
 
 One logical approach to estimate the values of the $\beta$s is in a way that would make the errors, or equivalently sum of their squares, as small as possible. This is the **ordinary least squares** estimator.
 
@@ -106,7 +106,16 @@ $$\hat{\beta_0} = \bar{y} - \hat{\beta_{1}}\bar{x}$$
 Because of the assumptions we made earlier, our estimators have some very nice statistical properties. If our errors are uncorrelated and have mean zero and are homoscedasticity, then our estimates are the best linear unbiased estimator. Being unbiased means that the estimator  of $\beta$, on average, the true value of the $\beta$. Being the "best" estimator means it has the lowest variance of all linear unbiased estimators. There are numerous websites and textbooks that discuss derivations of estimates in great detail.
 
 ### Notation and terminology
-Models are usually written in matrix notation for convenience. So far we have worked with one continuous $y$ variable and one continuous $x$ variable. This is called **simple linear regression**. The matrix formulation of simple linear regression is:
+Models are usually written in matrix notation for convenience. So far we have worked with one continuous $y$ variable and one continuous $x$ variable. This is called **simple linear regression**. Since we are working with $N$ observations (index by $i$), we have a system of linear equations.
+
+$$
+y_1 = \beta_{0} + \beta_{1}x_{1} + \epsilon_{1} \\
+y_2 = \beta_{0} + \beta_{1}x_{2} + \epsilon_{2} \\
+\dots \\
+y_N = \beta_{0} + \beta_{1}x_{N} + \epsilon_{N}
+$$
+
+Rather than writing this out repeatedly, we work with matrix notation:
 
 $$Y = \begin{pmatrix}
 y_1 \\ y_2 \\ \dots \\ y_N
@@ -121,19 +130,22 @@ y_1 \\ y_2 \\ \dots \\ y_N
 \epsilon_{1} \\ \epsilon_{2} \\ \dots \\ \epsilon_{N}
 \end{pmatrix}$$
 $$Y = X\beta + \epsilon, \epsilon_{i} \stackrel{iid}{\sim}N(0,\sigma^{2})$$
-When you inevitably extend your model to include multiple predictors, your model will look the same except for the matrix $X$, which will be:
+When you extend your model to include multiple predictors (say, $p$ of them), your model will look the same except for the matrix $X$ and vector $\beta$, which will be:
 $$X =
 \begin{pmatrix}
 1 & x_{11} & x_{12} & \dots & x_{1p} \\
 1 & x_{21} & x_{23} & \dots & x_{2p}\\
 \dots & \dots & \dots & \dots & \dots \\
 1 & x_{N1} & x_{N2} & \dots & x_{Np}
+\end{pmatrix},
+\beta = \begin{pmatrix}
+\beta_{0} \\ \beta_{1} \\ \dots \\ \beta_{p}
 \end{pmatrix}$$
 
 The estimate for the $\beta$s in matrix notation is written as:
 $$\hat{\beta} = (X^{T}X)^{-1}X^{T}Y$$
 
-Also, the $\beta$s follow a normal distribution:
+When doing inference, the $\beta$s follow a normal distribution:
 $$\hat{\beta} \sim N(\beta, (X^{T}X)^{-1}\sigma^{2})$$
 
 There are many terms used to describe the variables and types of models used. This is a brief reference. 
@@ -265,7 +277,7 @@ print(paste("(",(beta_est + t_1*beta_sd), ", " , (beta_est - t_1*beta_sd), ")",s
 ```
 
 ### Multiple variables
-Often we want to test multiple variables. Luckily, this is straightforward to do -- we simply add more variables to our model and carry out the rest of the tests as intended. Mathematically, we have:
+Often we want to test multiple variables. Luckily, this is straightforward to do -- we simply add more variables to our model and carry out the rest of the tests as intended. Mathematically for each observation we have:
 $$y_i = \beta_0 + \beta_1x_{i1} + \beta_{2}x_{i2} + \epsilon_{i}$$
 
 ```{r Multiple regression}
@@ -301,11 +313,11 @@ summary(my_model_2) # output the analysis
 
 The estimates are:
 
-* $\hat{\beta_0} = -253.3287$ ($\beta_0 = -300$)
-* $\hat{\beta_{1}} = 6.0382$ ($\beta_1 = 7$)
-* $\hat{\beta_{2}} = -11.0692$ ($\beta_2 = -12$)
+* $\hat{\beta_0} = -253.3287$ (true value: $\beta_0 = -300$)
+* $\hat{\beta_{1}} = 6.0382$ (true value: $\beta_1 = 7$)
+* $\hat{\beta_{2}} = -11.0692$ (true value: $\beta_2 = -12$)
 
-The results are close. As an exercise, let's see what happens if we raise the sample size to something huge, say, $10,000$.
+We interpret these results the same as in the simple regression model. If we increase $x_{i2}$ by $1$, then our estimate for $y_{i}$ will change by $-11.0692$. If we increase $x_{i1}$ by $1$, then our estimate for $y_{i}$ will change by $6.0382$. Note these estimated slopes are close to the true values. As an exercise, let's see what happens if we raise the sample size to something huge, say, $10,000$.
 
 ```{r Multiple regression with large sample size}
 set.seed(20191203) # set a seed for reproducibility
