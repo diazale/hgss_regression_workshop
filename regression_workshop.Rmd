@@ -121,8 +121,20 @@ y_1 \\ y_2 \\ \dots \\ y_N
 \epsilon_{1} \\ \epsilon_{2} \\ \dots \\ \epsilon_{N}
 \end{pmatrix}$$
 $$Y = X\beta + \epsilon, \epsilon_{i} \stackrel{iid}{\sim}N(0,\sigma^{2})$$
+When you inevitably extend your model to include multiple predictors, your model will look the same except for the matrix $X$, which will be:
+$$X =
+\begin{pmatrix}
+1 & x_{11} & x_{12} & \dots & x_{1p} \\
+1 & x_{21} & x_{23} & \dots & x_{2p}\\
+\dots & \dots & \dots & \dots & \dots \\
+1 & x_{N1} & x_{N2} & \dots & x_{Np}
+\end{pmatrix}$$
 
+The estimate for the $\beta$s in matrix notation is written as:
+$$\hat{\beta} = (X^{T}X)^{-1}X^{T}Y$$
 
+Also, the $\beta$s follow a normal distribution:
+$$\hat{\beta} \sim N(\beta, (X^{T}X)^{-1}\sigma^{2})$$
 
 There are many terms used to describe the variables and types of models used. This is a brief reference. 
 
@@ -172,9 +184,16 @@ Note that the data is still kind of noisy -- this is fine, as data is not always
 my_model <- lm(y_data ~ x_data)
 ```
 
+We can visualize what the model looks like:
+
+```{r Visualizing simple linear regression}
+plot(x_data, y_data)
+abline(my_model)
+```
+
 To look at the results of our model, we use the `summary` function.
 
-```{r}
+```{r Summary of simple linear regression}
 summary(my_model)
 ```
 
@@ -228,12 +247,7 @@ The F-statistic tests the hypothesis that *all* of your non-intercept $\beta$ va
 $$H_0: \beta_1 = \dots = \beta_p = 0 \text{ vs. } H_A:\text{At least one slope is not zero}$$
 If your F-statistic is non-significant, none of your predictors are useful! In this case it's a moot point as we only have one slope anyway.
 
-We can visualize what the model looks like:
-
-```{r Visualizing simple linear regression}
-plot(x_data, y_data)
-abline(my_model)
-```
+<!--Because of the assumptions we made earlier,  we can contruct confidence intervals for our $\beta$ values. We can do this in R using `confint`, or construct them ourselves using the equation $\hat{\beta} \pm t_{1 - \alpha/2,n-p}s.e.(\hat{\beta})  $-->
 
 ### Multiple variables
 Often we want to test multiple variables. Luckily, this is straightforward to do -- we simply add more variables to our model and carry out the rest of the tests as intended. Mathematically, we have:
